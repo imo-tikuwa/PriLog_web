@@ -22,8 +22,11 @@ git version 2.25.0.windows.1
 ```
 
 
-### ローカルの動画解析
+### ローカルの動画解析を行うバッチスクリプト
 ```
 > python app_local.py --filepath local\sample_2500kbps.mp4
 ```
+実行結果イメージ  
+![result1](https://user-images.githubusercontent.com/48991931/76156809-fab31e80-6142-11ea-824d-95c33513a99d.png)
+
 
