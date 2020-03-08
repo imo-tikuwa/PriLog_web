@@ -30,3 +30,9 @@ git version 2.25.0.windows.1
 ![result1](https://user-images.githubusercontent.com/48991931/76156809-fab31e80-6142-11ea-824d-95c33513a99d.png)
 
 
+### 起動中のプリコネの画面を直接解析するプログラム
+TLの記録開始後、Ctrl+CでKeyboardInterruptを呼び出すか正常にスコア画面が認識できたときにため込んだTLを出力します。  
+OSやマシンスペックによって意図した動作をしないことがありそう。。
+```
+> python app_local_realtime.py
+```
