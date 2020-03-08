@@ -1,6 +1,6 @@
 /movie/
 /tmp/
-*.mp4
+/tmp/*.mp4
 .idea
 /.project
 /.pydevproject
