@@ -1,0 +1,4 @@
+Flask==1.1.1
+numpy==1.18.1
+opencv-python==4.2.0.32
+pytube3==9.6.4
