@@ -12,7 +12,7 @@ import json
 import urllib.parse
 import characters as cd
 import after_caluculation as ac
-import prkn_app_functions as appf
+from prkn_app_functions import *
 
 
 stream_dir = "tmp/"
@@ -34,7 +34,7 @@ def cache_check(youtube_id):
     try:
         cache_path = cache_dir + urllib.parse.quote(youtube_id) + '.json'
         ret = json.load(open(cache_path))
-        if len(ret) is appf.CACHE_NUM:
+        if len(ret) is CACHE_NUM:
             # キャッシュから取得した値の数が規定値
             return ret
         else:
@@ -85,22 +85,22 @@ def search(youtube_id):
     try:
         yt = YouTube(youtube_url)
     except:
-        return None, None, None, None, appf.ERROR_CANT_GET_MOVIE
+        return None, None, None, None, ERROR_CANT_GET_MOVIE
 
     movie_thumbnail = yt.thumbnail_url
     movie_length = yt.length
     if int(movie_length) > 480:
-        return None, None, None, None, appf.ERROR_TOO_LONG
+        return None, None, None, None, ERROR_TOO_LONG
 
     stream = yt.streams.get_by_itag("22")
     if stream is None:
-        return None, None, None, None, appf.ERROR_NOT_SUPPORTED
+        return None, None, None, None, ERROR_NOT_SUPPORTED
 
     movie_title = stream.title
     movie_name = tm.time()
     movie_path = stream.download(stream_dir, str(movie_name))
 
-    return movie_path, movie_title, movie_length, movie_thumbnail, appf.NO_ERROR
+    return movie_path, movie_title, movie_length, movie_thumbnail, NO_ERROR
 
 
 def analyze_movie(movie_path):
@@ -115,15 +115,15 @@ def analyze_movie(movie_path):
     frame_height = int(video.get(4))  # フレームの高さ
 
     try:
-        video_type = appf.FRAME_RESOLUTION.index((frame_width, frame_height))
+        video_type = FRAME_RESOLUTION.index((frame_width, frame_height))
     except ValueError:
         video.release()
         clear_path(movie_path)
 
-        return None, None, None, None, appf.ERROR_NOT_SUPPORTED
+        return None, None, None, None, ERROR_NOT_SUPPORTED
 
-    appf.model_init(video_type)
-    appf.roi_init(video_type)
+    CHARACTERS_DATA, SEC_DATA, MENU_DATA, SCORE_DATA, DAMAGE_DATA, ICON_DATA = model_init(video_type)
+    UB_ROI, MIN_ROI, TEN_SEC_ROI, ONE_SEC_ROI, MENU_ROI, SCORE_ROI, DAMAGE_DATA_ROI, CHARACTER_ICON_ROI, MENU_LOC, FRAME_THRESH = roi_init(video_type)
 
     n = 0.34  # n秒ごと*
     ub_interval = 0
@@ -134,12 +134,12 @@ def analyze_movie(movie_path):
 
     menu_check = False
 
-    min_roi = appf.MIN_ROI
-    tensec_roi = appf.TEN_SEC_ROI
-    onesec_roi = appf.ONE_SEC_ROI
-    ub_roi = appf.UB_ROI
-    score_roi = appf.SCORE_ROI
-    damage_data_roi = appf.DAMAGE_DATA_ROI
+    min_roi = MIN_ROI
+    tensec_roi = TEN_SEC_ROI
+    onesec_roi = ONE_SEC_ROI
+    ub_roi = UB_ROI
+    score_roi = SCORE_ROI
+    damage_data_roi = DAMAGE_DATA_ROI
 
     ub_data = []
     ub_data_value = []
@@ -164,41 +164,41 @@ def analyze_movie(movie_path):
 
                     if ret is False:
                         break
-                    work_frame = appf.edit_frame(original_frame)
+                    work_frame = edit_frame(original_frame)
 
                     if menu_check is False:
-                        menu_check, menu_loc = appf.analyze_menu_frame(work_frame, appf.MENU_DATA, appf.MENU_ROI)
+                        menu_check, menu_loc = analyze_menu_frame(work_frame, MENU_DATA, MENU_ROI)
                         if menu_check is True:
-                            loc_diff = np.array(appf.MENU_LOC) - np.array(menu_loc)
+                            loc_diff = np.array(MENU_LOC) - np.array(menu_loc)
                             roi_diff = (loc_diff[0], loc_diff[1], loc_diff[0], loc_diff[1])
-                            min_roi = np.array(appf.MIN_ROI) - np.array(roi_diff)
-                            tensec_roi = np.array(appf.TEN_SEC_ROI) - np.array(roi_diff)
-                            onesec_roi = np.array(appf.ONE_SEC_ROI) - np.array(roi_diff)
-                            ub_roi = np.array(appf.UB_ROI) - np.array(roi_diff)
-                            score_roi = np.array(appf.SCORE_ROI) - np.array(roi_diff)
-                            damage_data_roi = np.array(appf.DAMAGE_DATA_ROI) - np.array(roi_diff)
+                            min_roi = np.array(MIN_ROI) - np.array(roi_diff)
+                            tensec_roi = np.array(TEN_SEC_ROI) - np.array(roi_diff)
+                            onesec_roi = np.array(ONE_SEC_ROI) - np.array(roi_diff)
+                            ub_roi = np.array(UB_ROI) - np.array(roi_diff)
+                            score_roi = np.array(SCORE_ROI) - np.array(roi_diff)
+                            damage_data_roi = np.array(DAMAGE_DATA_ROI) - np.array(roi_diff)
 
-                            appf.analyze_anna_icon_frame(work_frame, appf.CHARACTER_ICON_ROI, characters_find)
+                            analyze_anna_icon_frame(work_frame, CHARACTER_ICON_ROI, characters_find)
 
                     else:
                         if time_min is "1":
-                            time_min = appf.analyze_timer_frame(work_frame, min_roi, 2, time_min)
+                            time_min = analyze_timer_frame(work_frame, min_roi, 2, time_min)
 
-                        time_sec10 = appf.analyze_timer_frame(work_frame, tensec_roi, 6, time_sec10)
-                        time_sec1 = appf.analyze_timer_frame(work_frame, onesec_roi, 10, time_sec1)
+                        time_sec10 = analyze_timer_frame(work_frame, tensec_roi, 6, time_sec10)
+                        time_sec1 = analyze_timer_frame(work_frame, onesec_roi, 10, time_sec1)
 
-                        ub_result = appf.analyze_ub_frame(work_frame, ub_roi, time_min, time_sec10, time_sec1,
+                        ub_result = analyze_ub_frame(work_frame, ub_roi, time_min, time_sec10, time_sec1,
                                                      ub_data, ub_data_value, characters_find)
 
-                        if ub_result is appf.FOUND:
+                        if ub_result is FOUND:
                             ub_interval = i
 
                         # スコア表示の有無を確認
-                        ret = appf.analyze_score_frame(work_frame, appf.SCORE_DATA, score_roi)
+                        ret = analyze_score_frame(work_frame, SCORE_DATA, score_roi)
 
                         if ret is True:
                             # 総ダメージ解析
-                            ret = appf.analyze_damage_frame(original_frame, damage_data_roi, tmp_damage)
+                            ret = analyze_damage_frame(original_frame, damage_data_roi, tmp_damage)
 
                             if ret is True:
                                 total_damage = "総ダメージ " + ''.join(tmp_damage)
@@ -215,7 +215,7 @@ def analyze_movie(movie_path):
     time_data.append("動画時間 : {:.3f}".format(frame_count / frame_rate) + "  sec")
     time_data.append("処理時間 : {:.3f}".format(time_result) + "  sec")
 
-    return ub_data, time_data, total_damage, debuff_value, appf.NO_ERROR
+    return ub_data, time_data, total_damage, debuff_value, NO_ERROR
 
 
 app = Flask(__name__)
@@ -257,13 +257,13 @@ def predicts():
 
         path, title, length, thumbnail, url_result = search(youtube_id)
 
-        if url_result is appf.ERROR_TOO_LONG:
+        if url_result is ERROR_TOO_LONG:
             error = "動画時間が長すぎるため、解析に対応しておりません"
             return render_template('index.html', error=error)
-        elif url_result is appf.ERROR_NOT_SUPPORTED:
+        elif url_result is ERROR_NOT_SUPPORTED:
             error = "非対応の動画です。「720p 1280x720」の一部の動画に対応しております"
             return render_template('index.html', error=error)
-        elif url_result is appf.ERROR_CANT_GET_MOVIE:
+        elif url_result is ERROR_CANT_GET_MOVIE:
             error = "動画の取得に失敗しました。もう一度入力をお願いします"
             return render_template('index.html', error=error)
         session['path'] = path
@@ -299,13 +299,13 @@ def predicts():
                 else:  # キャッシュが存在しない場合は解析
                     path, title, length, thumbnail, url_result = search(youtube_id)
 
-                    if url_result is appf.ERROR_TOO_LONG:
+                    if url_result is ERROR_TOO_LONG:
                         error = "動画時間が長すぎるため、解析に対応しておりません"
                         return render_template('index.html', error=error)
-                    elif url_result is appf.ERROR_NOT_SUPPORTED:
+                    elif url_result is ERROR_NOT_SUPPORTED:
                         error = "非対応の動画です。「720p 1280x720」の一部の動画に対応しております"
                         return render_template('index.html', error=error)
-                    elif url_result is appf.ERROR_CANT_GET_MOVIE:
+                    elif url_result is ERROR_CANT_GET_MOVIE:
                         error = "動画の取得に失敗しました。もう一度入力をお願いします"
                         return render_template('index.html', error=error)
                     session['path'] = path
@@ -324,7 +324,7 @@ def predicts():
             session.pop('youtube_id', None)
 
             error = None
-            if path is appf.ERROR_NOT_SUPPORTED:
+            if path is ERROR_NOT_SUPPORTED:
                 error = "非対応の動画です。「720p 1280x720」の一部の動画に対応しております"
 
             elif path is not None:
@@ -350,7 +350,7 @@ def analyze():
             json.dump([title, time_line, False, total_damage, debuff_value],
                       open(cache_dir + urllib.parse.quote(youtube_id) + '.json', 'w'))
 
-        if status is appf.NO_ERROR:
+        if status is NO_ERROR:
             # 解析が正常終了ならば結果を格納
             session['time_line'] = time_line
             session['time_data'] = time_data
@@ -358,7 +358,7 @@ def analyze():
             session['debuff_value'] = debuff_value
             return render_template('analyze.html')
         else:
-            session['path'] = appf.ERROR_NOT_SUPPORTED
+            session['path'] = ERROR_NOT_SUPPORTED
             return render_template('analyze.html')
     else:
         return redirect("/")
@@ -398,7 +398,7 @@ def result():
 
 @app.route('/rest/analyze', methods=['POST', 'GET'])
 def remoteAnalyze():
-    status = appf.NO_ERROR
+    status = NO_ERROR
     msg = "OK"
     result = {}
 
@@ -407,7 +407,7 @@ def remoteAnalyze():
     url = ""
     if request.method == 'POST':
         if "Url" not in request.form:
-            status = appf.ERROR_REQUIRED_PARAM
+            status = ERROR_REQUIRED_PARAM
             msg = "必須パラメータがありません"
 
             ret["msg"] = msg
@@ -418,7 +418,7 @@ def remoteAnalyze():
 
     elif request.method == 'GET':
         if "Url" not in request.args:
-            status = appf.ERROR_REQUIRED_PARAM
+            status = ERROR_REQUIRED_PARAM
             msg = "必須パラメータがありません"
 
             ret["msg"] = msg
@@ -431,7 +431,7 @@ def remoteAnalyze():
     youtube_id = get_youtube_id(url)
     if youtube_id is False:
         # 不正なurlの場合
-        status = appf.ERROR_BAD_URL
+        status = ERROR_BAD_URL
         msg = "URLはhttps://www.youtube.com/watch?v=...の形式でお願いします"
     else:
         # 正常なurlの場合
@@ -454,7 +454,7 @@ def remoteAnalyze():
                         map(lambda x: "↓{} {}".format(str(debuff_value[x[0]][0:]).rjust(3, " "), x[1]),
                             enumerate(time_line))))
             else:
-                status = appf.ERROR_NOT_SUPPORTED
+                status = ERROR_NOT_SUPPORTED
                 msg = "非対応の動画です。「720p 1280x720」の一部の動画に対応しております"
         else:  # キャッシュ無しの場合
             # 解析中かどうかを確認
@@ -484,7 +484,7 @@ def remoteAnalyze():
                             break
                         else:  # キャッシュ未生成の場合
                             # キャッシュを書き出してから解析キューから削除されるため、本来起こり得ないはずのエラー
-                            status = appf.ERROR_PROCESS_FAILED
+                            status = ERROR_PROCESS_FAILED
                             msg = "解析結果の取得に失敗しました"
                             break
 
@@ -495,11 +495,11 @@ def remoteAnalyze():
                 # youtube動画検索/検証
                 path, title, length, thumbnail, url_result = search(youtube_id)
                 status = url_result
-                if url_result is appf.ERROR_TOO_LONG:
+                if url_result is ERROR_TOO_LONG:
                     msg = "動画時間が長すぎるため、解析に対応しておりません"
-                elif url_result is appf.ERROR_NOT_SUPPORTED:
+                elif url_result is ERROR_NOT_SUPPORTED:
                     msg = "非対応の動画です。「720p 1280x720」の一部の動画に対応しております"
-                elif url_result is appf.ERROR_CANT_GET_MOVIE:
+                elif url_result is ERROR_CANT_GET_MOVIE:
                     msg = "動画の取得に失敗しました。もう一度入力をお願いします"
                 else:
                     # TL解析
@@ -511,7 +511,7 @@ def remoteAnalyze():
                         json.dump([title, time_line, False, total_damage, debuff_value],
                                   open(cache_dir + urllib.parse.quote(youtube_id) + '.json', 'w'))
 
-                    if analyze_result is appf.NO_ERROR:
+                    if analyze_result is NO_ERROR:
                         # 解析が正常終了ならば結果を格納
                         result["title"] = title
                         result["total_damage"] = total_damage

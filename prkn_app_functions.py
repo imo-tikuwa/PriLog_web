@@ -119,7 +119,7 @@ def model_init(video_type):
         DAMAGE_DATA = np.load("model/2_1/damage_data_2_1.npy")
         ICON_DATA = np.load("model/2_1/icon_data_2_1.npy")
 
-    return
+    return CHARACTERS_DATA, SEC_DATA, MENU_DATA, SCORE_DATA, DAMAGE_DATA, ICON_DATA
 
 
 def roi_init(video_type):
@@ -171,7 +171,7 @@ def roi_init(video_type):
         MENU_LOC = (75, 17)
         FRAME_THRESH = 180
 
-    return
+    return UB_ROI, MIN_ROI, TEN_SEC_ROI, ONE_SEC_ROI, MENU_ROI, SCORE_ROI, DAMAGE_DATA_ROI, CHARACTER_ICON_ROI, MENU_LOC, FRAME_THRESH
 
 
 def edit_frame(frame):
