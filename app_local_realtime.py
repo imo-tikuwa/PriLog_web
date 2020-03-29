@@ -92,9 +92,9 @@ def main():
 
             # 指定した領域内をクリッピング
             img = ImageGrab.grab(bbox=(cap_left,cap_top,cap_right,cap_bottom))
-            frame = np.array(img) # video.read()と同等のデータ取得
+            original_frame = np.array(img) # video.read()と同等のデータ取得
 
-            work_frame = edit_frame(frame)
+            work_frame = edit_frame(original_frame)
 
             if menu_check is False:
                 menu_check, menu_loc = analyze_menu_frame(work_frame, MENU_DATA, MENU_ROI)
